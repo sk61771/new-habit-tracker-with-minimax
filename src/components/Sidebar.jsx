@@ -1,11 +1,12 @@
 import React from 'react';
-import { LayoutDashboard, PlusCircle, List, Wallet, X } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, List, Wallet, TrendingUp, ArrowUpCircle } from 'lucide-react';
 
 export default function Sidebar({ activeView, setActiveView, isOpen, setIsOpen }) {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'add', label: 'Add Expense', icon: PlusCircle },
-    { id: 'expenses', label: 'All Expenses', icon: List },
+    { id: 'add', label: 'Quick Add', icon: PlusCircle },
+    { id: 'income', label: 'Income', icon: ArrowUpCircle },
+    { id: 'expenses', label: 'Expenses', icon: List },
     { id: 'budget', label: 'Budget', icon: Wallet }
   ];
 

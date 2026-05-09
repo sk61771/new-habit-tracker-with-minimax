@@ -1,20 +1,25 @@
 import React, { useState } from 'react';
-import { Menu, Plus } from 'lucide-react';
+import { Menu, Plus, Minus, ArrowUpCircle } from 'lucide-react';
 import { ExpenseProvider, useExpense } from './context/ExpenseContext';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import ExpenseForm from './components/ExpenseForm';
 import ExpenseList from './components/ExpenseList';
+import IncomeForm from './components/IncomeForm';
+import IncomeList from './components/IncomeList';
 import BudgetManager from './components/BudgetManager';
 
 function AppContent() {
   const [activeView, setActiveView] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showExpenseForm, setShowExpenseForm] = useState(false);
+  const [showIncomeForm, setShowIncomeForm] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
+  const [editingIncome, setEditingIncome] = useState(null);
 
-  const { addExpense, updateExpense, deleteExpense } = useExpense();
+  const { addExpense, updateExpense, deleteExpense, addIncome, updateIncome, deleteIncome } = useExpense();
 
+  // Expense handlers
   const handleSaveExpense = (expense) => {
     if (expense.id) {
       updateExpense(expense);
@@ -36,14 +41,55 @@ function AppContent() {
     }
   };
 
-  const handleCloseForm = () => {
+  const handleCloseExpenseForm = () => {
     setShowExpenseForm(false);
     setEditingExpense(null);
   };
 
+  // Income handlers
+  const handleSaveIncome = (income) => {
+    if (income.id) {
+      updateIncome(income);
+    } else {
+      addIncome(income);
+    }
+    setShowIncomeForm(false);
+    setEditingIncome(null);
+  };
+
+  const handleEditIncome = (income) => {
+    setEditingIncome(income);
+    setShowIncomeForm(true);
+  };
+
+  const handleDeleteIncome = (id) => {
+    if (window.confirm('Are you sure you want to delete this income?')) {
+      deleteIncome(id);
+    }
+  };
+
+  const handleCloseIncomeForm = () => {
+    setShowIncomeForm(false);
+    setEditingIncome(null);
+  };
+
+  // FAB menu state
+  const [fabMenuOpen, setFabMenuOpen] = useState(false);
+
   const handleFABClick = () => {
+    setFabMenuOpen(!fabMenuOpen);
+  };
+
+  const handleAddExpense = () => {
     setEditingExpense(null);
     setShowExpenseForm(true);
+    setFabMenuOpen(false);
+  };
+
+  const handleAddIncome = () => {
+    setEditingIncome(null);
+    setShowIncomeForm(true);
+    setFabMenuOpen(false);
   };
 
   const renderView = () => {
@@ -53,20 +99,42 @@ function AppContent() {
           <Dashboard
             onEditExpense={handleEditExpense}
             onDeleteExpense={handleDeleteExpense}
+            onEditIncome={handleEditIncome}
+            onDeleteIncome={handleDeleteIncome}
           />
         );
       case 'add':
         return (
           <div className="flex items-center justify-center min-h-[60vh]">
             <div className="text-center">
-              <div className="text-6xl mb-4">💸</div>
-              <h2 className="text-xl font-semibold text-white mb-2">Add New Expense</h2>
-              <p className="text-slate-400 mb-6">Click the + button below to add your first expense</p>
-              <button onClick={handleFABClick} className="btn-primary">
-                Add Expense
-              </button>
+              <div className="text-6xl mb-4">💰</div>
+              <h2 className="text-xl font-semibold text-white mb-2">Quick Add</h2>
+              <p className="text-slate-400 mb-6">Choose what to add</p>
+              <div className="flex gap-4 justify-center">
+                <button
+                  onClick={handleAddExpense}
+                  className="btn-primary bg-gradient-to-r from-rose-500 to-pink-500 shadow-lg shadow-rose-500/30"
+                >
+                  <Minus className="w-5 h-5 mr-2" />
+                  Expense
+                </button>
+                <button
+                  onClick={handleAddIncome}
+                  className="btn-primary bg-gradient-to-r from-emerald-500 to-teal-500 shadow-lg shadow-emerald-500/30"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  Income
+                </button>
+              </div>
             </div>
           </div>
+        );
+      case 'income':
+        return (
+          <IncomeList
+            onEditIncome={handleEditIncome}
+            onDeleteIncome={handleDeleteIncome}
+          />
         );
       case 'expenses':
         return (
@@ -117,20 +185,56 @@ function AppContent() {
         </div>
       </main>
 
-      {/* FAB Button */}
-      <button
-        onClick={handleFABClick}
-        className="fixed bottom-24 lg:bottom-8 right-4 lg:right-8 w-14 h-14 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 shadow-lg shadow-indigo-500/30 flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-20"
-      >
-        <Plus className="w-7 h-7 text-white" />
-      </button>
+      {/* FAB Menu */}
+      <div className="fixed bottom-24 lg:bottom-8 right-4 lg:right-8 z-20">
+        {/* FAB Menu Items */}
+        {fabMenuOpen && (
+          <div className="absolute bottom-16 right-0 mb-2 space-y-2 animate-fade-in">
+            <button
+              onClick={handleAddIncome}
+              className="flex items-center gap-3 px-4 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-lg transition-all"
+            >
+              <ArrowUpCircle className="w-5 h-5" />
+              <span className="font-medium">Income</span>
+            </button>
+            <button
+              onClick={handleAddExpense}
+              className="flex items-center gap-3 px-4 py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-xl shadow-lg transition-all"
+            >
+              <Plus className="w-5 h-5" />
+              <span className="font-medium">Expense</span>
+            </button>
+          </div>
+        )}
+
+        {/* FAB Button */}
+        <button
+          onClick={handleFABClick}
+          className={`w-14 h-14 rounded-full shadow-lg flex items-center justify-center hover:scale-110 active:scale-95 transition-all ${
+            fabMenuOpen
+              ? 'bg-slate-600 rotate-45'
+              : 'bg-gradient-to-r from-indigo-500 to-purple-500 shadow-indigo-500/30'
+          }`}
+        >
+          <Plus className="w-7 h-7 text-white" />
+        </button>
+      </div>
 
       {/* Expense Form Modal */}
       {showExpenseForm && (
         <ExpenseForm
           onSave={handleSaveExpense}
-          onClose={handleCloseForm}
+          onClose={handleCloseExpenseForm}
           editExpense={editingExpense}
+        />
+      )}
+
+      {/* Income Form Modal */}
+      {showIncomeForm && (
+        <IncomeForm
+          onSave={handleSaveIncome}
+          onClose={handleCloseIncomeForm}
+          editIncome={editingIncome}
         />
       )}
     </div>

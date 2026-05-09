@@ -6,6 +6,7 @@ const ExpenseContext = createContext();
 
 const initialState = {
   expenses: [],
+  incomes: [],
   budgets: {},
   currentMonth: getCurrentMonth()
 };
@@ -28,6 +29,22 @@ function expenseReducer(state, action) {
         ...state,
         expenses: state.expenses.filter(exp => exp.id !== action.payload)
       };
+    case 'SET_INCOMES':
+      return { ...state, incomes: action.payload };
+    case 'ADD_INCOME':
+      return { ...state, incomes: [...state.incomes, action.payload] };
+    case 'UPDATE_INCOME':
+      return {
+        ...state,
+        incomes: state.incomes.map(inc =>
+          inc.id === action.payload.id ? action.payload : inc
+        )
+      };
+    case 'DELETE_INCOME':
+      return {
+        ...state,
+        incomes: state.incomes.filter(inc => inc.id !== action.payload)
+      };
     case 'SET_BUDGET':
       return {
         ...state,
@@ -48,6 +65,7 @@ export function ExpenseProvider({ children }) {
     setPersistedData(state);
   }, [state, setPersistedData]);
 
+  // Expense functions
   const addExpense = (expense) => {
     const newExpense = {
       ...expense,
@@ -65,6 +83,25 @@ export function ExpenseProvider({ children }) {
     dispatch({ type: 'DELETE_EXPENSE', payload: id });
   };
 
+  // Income functions
+  const addIncome = (income) => {
+    const newIncome = {
+      ...income,
+      id: Date.now().toString(),
+      date: income.date || new Date().toISOString()
+    };
+    dispatch({ type: 'ADD_INCOME', payload: newIncome });
+  };
+
+  const updateIncome = (income) => {
+    dispatch({ type: 'UPDATE_INCOME', payload: income });
+  };
+
+  const deleteIncome = (id) => {
+    dispatch({ type: 'DELETE_INCOME', payload: id });
+  };
+
+  // Budget functions
   const setBudget = (month, amount) => {
     dispatch({ type: 'SET_BUDGET', payload: { month, amount } });
   };
@@ -73,6 +110,7 @@ export function ExpenseProvider({ children }) {
     dispatch({ type: 'SET_MONTH', payload: month });
   };
 
+  // Get monthly data
   const getMonthlyExpenses = (month) => {
     return state.expenses.filter(exp => {
       const expMonth = exp.date.substring(0, 7);
@@ -80,8 +118,23 @@ export function ExpenseProvider({ children }) {
     });
   };
 
+  const getMonthlyIncomes = (month) => {
+    return state.incomes.filter(inc => {
+      const incMonth = inc.date.substring(0, 7);
+      return incMonth === month;
+    });
+  };
+
   const getMonthlyTotal = (month) => {
     return getMonthlyExpenses(month).reduce((sum, exp) => sum + exp.amount, 0);
+  };
+
+  const getMonthlyIncomeTotal = (month) => {
+    return getMonthlyIncomes(month).reduce((sum, inc) => sum + inc.amount, 0);
+  };
+
+  const getBalance = (month) => {
+    return getMonthlyIncomeTotal(month) - getMonthlyTotal(month);
   };
 
   const getCategoryTotals = (month) => {
@@ -89,6 +142,15 @@ export function ExpenseProvider({ children }) {
     const totals = {};
     monthlyExpenses.forEach(exp => {
       totals[exp.category] = (totals[exp.category] || 0) + exp.amount;
+    });
+    return totals;
+  };
+
+  const getIncomeCategoryTotals = (month) => {
+    const monthlyIncomes = getMonthlyIncomes(month);
+    const totals = {};
+    monthlyIncomes.forEach(inc => {
+      totals[inc.category] = (totals[inc.category] || 0) + inc.amount;
     });
     return totals;
   };
@@ -112,16 +174,24 @@ export function ExpenseProvider({ children }) {
 
   const value = {
     expenses: state.expenses,
+    incomes: state.incomes,
     budgets: state.budgets,
     currentMonth: state.currentMonth,
     addExpense,
     updateExpense,
     deleteExpense,
+    addIncome,
+    updateIncome,
+    deleteIncome,
     setBudget,
     setCurrentMonth,
     getMonthlyExpenses,
+    getMonthlyIncomes,
     getMonthlyTotal,
+    getMonthlyIncomeTotal,
+    getBalance,
     getCategoryTotals,
+    getIncomeCategoryTotals,
     getBudget,
     getRemainingBudget,
     getBudgetPercentage
