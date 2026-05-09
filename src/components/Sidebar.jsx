@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, PlusCircle, List, Wallet, TrendingUp, ArrowUpCircle } from 'lucide-react';
+import { LayoutDashboard, PlusCircle, List, Wallet, TrendingUp, ArrowUpCircle, X } from 'lucide-react';
 
 export default function Sidebar({ activeView, setActiveView, isOpen, setIsOpen }) {
   const navItems = [
